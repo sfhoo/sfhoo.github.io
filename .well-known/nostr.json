@@ -1,8 +1,8 @@
 {
   "names": {
-    "sfhoo": "c19ebea0170123a109db207ea70ef483d0f616aa9e9b69758f4c24503dea9ca6"
+    "sfhoo": "aad1af90454aaaa8db07db6a8d83a519dfd76e50347f4a1d37b5f0a9b874909a"
   },
   "relays": {
-    "c19ebea0170123a109db207ea70ef483d0f616aa9e9b69758f4c24503dea9ca6": [ "wss://relay.damus.io" ]
+    "aad1af90454aaaa8db07db6a8d83a519dfd76e50347f4a1d37b5f0a9b874909a": [ "wss://relay.damus.io" ]
   }
 }

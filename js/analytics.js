@@ -11,7 +11,8 @@
     // Entry point: which section the visitor landed on and where they came from.
     gtag('event', 'entry_point', {
         entry_section: location.hash ? location.hash.slice(1) : 'top',
-        entry_referrer: document.referrer || '(direct)'
+        // Only the referring site's domain, never the full URL.
+        entry_referrer: document.referrer ? new URL(document.referrer).hostname : '(direct)'
     });
 
     var SOCIAL = {
@@ -118,17 +119,6 @@
                     transport_type: 'beacon'
                 });
             }
-        });
-
-        // Copied text: what was copied and from which section.
-        document.addEventListener('copy', function () {
-            var sel = window.getSelection ? String(window.getSelection()) : '';
-            if (!sel.trim()) return;
-            var node = window.getSelection().anchorNode;
-            gtag('event', 'copy_text', {
-                copied_text: sel.trim().slice(0, 100),
-                copy_section: sectionOf(node && node.nodeType === 3 ? node.parentElement : node)
-            });
         });
     });
 })();

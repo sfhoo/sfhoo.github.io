@@ -18,8 +18,7 @@
     var SOCIAL = {
         'www.linkedin.com': 'LinkedIn', 'linkedin.com': 'LinkedIn',
         'github.com': 'GitHub',
-        'twitter.com': 'X', 'x.com': 'X',
-        'sfhoo.eth.xyz': 'Web3 profile'
+        'twitter.com': 'X', 'x.com': 'X'
     };
 
     function sectionOf(node) {

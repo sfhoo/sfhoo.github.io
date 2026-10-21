@@ -99,6 +99,15 @@
         document.addEventListener('click', function (ev) {
             var a = ev.target.closest('a');
             if (!a) return;
+            var latestCard = a.closest('.latest-card');
+            if (latestCard) {
+                gtag('event', 'latest_click', {
+                    post_id: latestCard.getAttribute('data-latest-id') || '',
+                    link_type: a.getAttribute('data-latest-link') === 'x' ? 'x' : 'link',
+                    transport_type: 'beacon'
+                });
+                return; // Latest-card links are counted only as latest_click
+            }
             if (a.hash === '#resume' && a.hostname === location.hostname) {
                 gtag('event', 'resume_link_click', { link_text: a.textContent.trim() });
             }

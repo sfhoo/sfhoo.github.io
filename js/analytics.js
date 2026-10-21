@@ -109,11 +109,13 @@
                 });
             }
             if (a.hostname === 'hoo.coffee' || a.hostname === 'www.hoo.coffee') {
-                gtag('event', 'studio_click', {
+                var studioParams = {
                     link_url: a.href,
                     link_location: a.getAttribute('data-link-location') || sectionOf(a),
                     transport_type: 'beacon'
-                });
+                };
+                if (a.getAttribute('data-game-name')) studioParams.game_name = a.getAttribute('data-game-name');
+                gtag('event', 'studio_click', studioParams);
             }
             if (a.hostname === 'patents.google.com' || a.hostname === 'patents.justia.com') {
                 var card = a.closest('.patent-card');

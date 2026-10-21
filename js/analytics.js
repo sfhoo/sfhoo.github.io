@@ -108,6 +108,13 @@
                     transport_type: 'beacon'
                 });
             }
+            if (a.hostname === 'hoo.coffee' || a.hostname === 'www.hoo.coffee') {
+                gtag('event', 'studio_click', {
+                    link_url: a.href,
+                    link_location: a.getAttribute('data-link-location') || sectionOf(a),
+                    transport_type: 'beacon'
+                });
+            }
             if (a.hostname === 'patents.google.com') {
                 var card = a.closest('.patent-card');
                 var title = card && card.querySelector('h3, h4');

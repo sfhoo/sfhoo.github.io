@@ -28,21 +28,34 @@
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Soon F. Hoo",
-        "url": "https://sfhoo.com/",
-        "image": "https://sfhoo.com/assets/img/soon-hoo-800.jpg",
-        "description": "Software engineer and innovation leader, co-inventor on five issued U.S. patents spanning distributed ledgers, secure delivery, authentication, IoT security, and telecommunications.",
-        "knowsAbout": ["Software engineering", "Generative AI", "APIs", "Cloud", "Blockchain", "IoT security", "Invention facilitation"],
-        "sameAs": ["https://www.linkedin.com/in/sfhoo", "https://github.com/sfhoo", "https://x.com/sfhoo"]
+        "@graph": [
+            {
+                "@type": "Person",
+                "@id": "https://sfhoo.com/#person",
+                "name": "Soon F. Hoo",
+                "url": "https://sfhoo.com/",
+                "image": "https://sfhoo.com/assets/img/soon-hoo-800.jpg",
+                "description": "Software engineer and innovation leader, co-inventor on five issued U.S. patents spanning distributed ledgers, secure delivery, authentication, IoT security, and telecommunications.",
+                "knowsAbout": ["Software engineering", "Generative AI", "APIs", "Cloud", "Blockchain", "IoT security", "Invention facilitation"],
+                "sameAs": ["https://www.linkedin.com/in/sfhoo", "https://github.com/sfhoo", "https://x.com/sfhoo"]
+            },
+            {
+                "@type": "Organization",
+                "@id": "https://hoo.coffee/#organization",
+                "name": "HOO Games",
+                "url": "https://hoo.coffee/",
+                "slogan": "Games for curious minds",
+                "founder": {"@id": "https://sfhoo.com/#person"}
+            }
+        ]
     }
     </script>
     <link rel="icon" href="/assets/favicon.ico?v=2" sizes="any">
     <link rel="icon" href="/assets/icon-192.png?v=2" type="image/png" sizes="192x192">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="stylesheet" href="/css/styles.css?v=6">
+    <link rel="stylesheet" href="/css/styles.css?v=7">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQ2P9YBCG0"></script>
-    <script src="/js/analytics.js?v=5" defer></script>
+    <script src="/js/analytics.js?v=6" defer></script>
     <script src="/js/scripts.js?v=2" defer></script>
 </head>
 <body id="page-top">
@@ -51,7 +64,7 @@
         <div class="container nav-wrap">
             <a class="brand" href="#page-top" aria-label="Soon F. Hoo, home"><span class="brand-mark" aria-hidden="true">順</span><span>Soon F. Hoo</span></a>
             <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu <span aria-hidden="true">+</span></button>
-            <nav id="site-nav" aria-label="Main navigation"><a href="#about">About</a><a href="#patents">Patents</a><a href="#resume">Résumé</a><a href="#contact">Connect</a></nav>
+            <nav id="site-nav" aria-label="Main navigation"><a href="#about">About</a><a href="#patents">Patents</a><a href="#studio">Studio</a><a href="#resume">Résumé</a><a href="#contact">Connect</a></nav>
         </div>
     </header>
     <main id="main">
@@ -126,9 +139,28 @@
         <p class="verification-note">Grant records checked October 14, 2026. Listed by issue date, newest first.</p>
         </div>
         </section>
+        <section class="profile-section studio-section" id="studio" aria-labelledby="studio-title">
+        <div class="container">
+        <p class="eyebrow">02 / Game studio</p>
+        <h2 id="studio-title">Games for curious minds.</h2>
+        <p class="section-intro">Outside my day-to-day engineering work, I build games at HOO Games, my independent studio.</p>
+        <div class="studio-card">
+        <div class="studio-brand">
+        <p class="studio-kicker">Independent studio</p>
+        <h3>HOO Games</h3>
+        <p>Games for curious minds</p>
+        <a class="studio-link" href="https://hoo.coffee/" target="_blank" rel="noopener" data-link-location="studio">Visit HOO Games <span aria-hidden="true">↗</span></a>
+        </div>
+        <ul class="studio-games">
+        <li><h4>Cyber Roadster</h4><p>Playable in the browser</p><span class="studio-tag">Web</span></li>
+        <li><h4>Nonogram: Brushtrail</h4><p>Invite-only testing on Android</p><span class="studio-tag">Android</span></li>
+        </ul>
+        </div>
+        </div>
+        </section>
         <section class="profile-section resume-section" id="resume" aria-labelledby="resume-title">
         <div class="container px-4 px-lg-5">
-        <p class="eyebrow">02 / Résumé</p>
+        <p class="eyebrow">03 / Résumé</p>
         <h2 id="resume-title">Experience that delivers.</h2>
 
 <p class="section-intro">A career connecting emerging technology, reliable delivery, and people.</p>
@@ -226,7 +258,7 @@
         </section>
 
         <section class="connect-section" id="contact" aria-labelledby="connect-title">
-            <div class="container connect-grid"><div><p class="eyebrow">03 / Connect</p><h2 id="connect-title">Let's connect.</h2><p>Find me online to explore my work and professional background, or send me an email.</p></div><div class="social-links"><a href="https://www.linkedin.com/in/sfhoo">LinkedIn <span aria-hidden="true">↗</span></a><a href="https://github.com/sfhoo">GitHub <span aria-hidden="true">↗</span></a><a href="https://x.com/sfhoo">X <span aria-hidden="true">↗</span></a><a href="#contact" class="email-link" data-k="55.53.57.116.53.53.50.60.41.26.53.60.52.51" rel="nofollow">Email me <span aria-hidden="true">✉</span></a></div></div>
+            <div class="container connect-grid"><div><p class="eyebrow">04 / Connect</p><h2 id="connect-title">Let's connect.</h2><p>Find me online to explore my work and professional background, or send me an email.</p></div><div class="social-links"><a href="https://www.linkedin.com/in/sfhoo">LinkedIn <span aria-hidden="true">↗</span></a><a href="https://github.com/sfhoo">GitHub <span aria-hidden="true">↗</span></a><a href="https://x.com/sfhoo">X <span aria-hidden="true">↗</span></a><a href="#contact" class="email-link" data-k="55.53.57.116.53.53.50.60.41.26.53.60.52.51" rel="nofollow">Email me <span aria-hidden="true">✉</span></a></div></div>
         </section>
     </main>
     <footer class="site-footer container"><span>© 2026 Soon F. Hoo</span><span class="privacy-note">This site uses Google Analytics to count visits and clicks. No names, emails, or other personal details are collected.</span><a href="#page-top">Back to top ↑</a></footer>

@@ -102,6 +102,12 @@
             if (a.hash === '#resume' && a.hostname === location.hostname) {
                 gtag('event', 'resume_link_click', { link_text: a.textContent.trim() });
             }
+            if (a.classList.contains('resume-download-link') || /\/Soon-F-Hoo-Resume\.pdf$/.test(a.pathname)) {
+                gtag('event', 'resume_download', {
+                    link_location: a.getAttribute('data-link-location') || sectionOf(a),
+                    transport_type: 'beacon'
+                });
+            }
             if (a.hostname === 'patents.google.com') {
                 var card = a.closest('.patent-card');
                 var title = card && card.querySelector('h3, h4');

@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "2113002571669365235",
+    "url": "https://x.com/sfhoo/status/2113002571669365235",
+    "created_at": "2026-10-21T20:20:45Z",
+    "text": "This is from National Security Agency\n\n\"Effective Immediately, all organizations using PHP for their systems are advised to be prepared for an update addressing two critical vulnerabilities. PHP is widely used for web applications. These vulnerabilities often provide a direct path to the server's file system or database. If an immediate update is not feasible, it is recommend that organizations take the system offline until it can be fully mitigated. NSA will follow up shortly with more specific guidance.\"",
+    "links": [],
+    "image": null
+  }
+]

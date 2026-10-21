@@ -111,7 +111,15 @@ def parse_input(raw):
     if isinstance(raw, list): return raw, {}
     media = {m.get('media_key'): m for m in (raw.get('includes') or {}).get('media') or []}
     data = raw.get('data') or []
-    return (data if isinstance(data, list) else [data]), media
+    data = data if isinstance(data, list) else [data]
+    for d in data:  # long posts (>280 chars): full text + entities live in note_tweet
+        nt = d.get('note_tweet') or {}
+        if nt.get('text'):
+            d['text'] = nt['text']
+            ents = dict(d.get('entities') or {})
+            ents.update(nt.get('entities') or {})
+            d['entities'] = ents
+    return data, media
 
 def to_entry(post, media, allow_local):
     pid = str(post.get('id') or '')

@@ -115,11 +115,16 @@
                     transport_type: 'beacon'
                 });
             }
-            if (a.hostname === 'patents.google.com') {
+            if (a.hostname === 'patents.google.com' || a.hostname === 'patents.justia.com') {
                 var card = a.closest('.patent-card');
                 var title = card && card.querySelector('h3, h4');
+                var label = card && card.querySelector('.eyebrow');
+                var pid = (a.pathname.match(/patent\/([^/]+)/) || [])[1] || a.href;
+                // Justia URLs carry only the number; use the card's "US 12,726,343 B1" label so IDs match Google's format.
+                if (a.hostname === 'patents.justia.com' && label) pid = label.textContent.replace(/[\s,]/g, '');
                 gtag('event', 'patent_click', {
-                    patent_id: (a.pathname.match(/patent\/([^/]+)/) || [])[1] || a.href,
+                    patent_id: pid,
+                    patent_source: a.hostname,
                     patent_title: title ? title.textContent.trim() : '',
                     transport_type: 'beacon'
                 });

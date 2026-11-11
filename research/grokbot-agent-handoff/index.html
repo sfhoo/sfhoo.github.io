@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="How Grokbot (GrokChief) can pass a coding job to another agent — why there is no native Grok to GPT/Claude handoff, and the git, branch, and Issue method that works today.">
+    <meta name="author" content="Soon F. Hoo">
+    <meta name="theme-color" content="#f6f4ee">
+    <title>How Grokbot can pass a coding job to another agent | Soon F. Hoo</title>
+    <link rel="canonical" href="https://sfhoo.com/research/grokbot-agent-handoff/">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Soon F. Hoo">
+    <meta property="og:url" content="https://sfhoo.com/research/grokbot-agent-handoff/">
+    <meta property="og:title" content="How Grokbot can pass a coding job to another agent">
+    <meta property="og:description" content="For GrokChief handing work to gptdev or a Claude-based agent. The short answer is not a protocol. It's a file, a branch, and an Issue.">
+    <meta property="og:image" content="https://sfhoo.com/assets/img/og-image.jpg">
+    <meta property="article:published_time" content="2026-11-11">
+    <meta property="article:author" content="https://sfhoo.com/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@sfhoo">
+    <meta name="twitter:creator" content="@sfhoo">
+    <meta name="twitter:title" content="How Grokbot can pass a coding job to another agent">
+    <meta name="twitter:description" content="For GrokChief handing work to gptdev or a Claude-based agent. The short answer is not a protocol. It's a file, a branch, and an Issue.">
+    <meta name="twitter:image" content="https://sfhoo.com/assets/img/og-image.jpg">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "How Grokbot can pass a coding job to another agent",
+        "description": "For GrokChief (Grok-based) handing work to gptdev (GPT/Codex) or a Claude-based agent — on a small self-hosted team with Gitea and an AWS deploy. The short answer is not a protocol. It's a file, a branch, and an Issue.",
+        "datePublished": "2026-11-11",
+        "author": {"@id": "https://sfhoo.com/#person"},
+        "mainEntityOfPage": "https://sfhoo.com/research/grokbot-agent-handoff/"
+    }
+    </script>
+    <link rel="icon" href="/assets/favicon.ico?v=3" sizes="any">
+    <link rel="icon" href="/assets/favicon.svg?v=3" type="image/svg+xml">
+    <link rel="icon" href="/assets/icon-192.png?v=3" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3">
+    <link rel="stylesheet" href="/css/styles.css?v=10">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQ2P9YBCG0"></script>
+    <script src="/js/analytics.js?v=9" defer></script>
+    <script src="/js/scripts.js?v=2" defer></script>
+    <style>
+    /* Page-scoped styles for the research article. Shared chrome (header, footer,
+       base type, cards) comes from /css/styles.css; only article-specific
+       components live here, in the site's own tokens. */
+    .research{padding-block:64px 90px}
+    .research h1{font-size:clamp(40px,5.2vw,64px);margin-bottom:24px}
+    .research .section-intro{margin-bottom:28px}
+    .research-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+    .research-meta span{font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:999px}
+    .research-toc{display:flex;gap:8px 24px;flex-wrap:wrap;font-size:14px;padding:18px 0;border-block:1px solid var(--line);margin-bottom:8px}
+    .research-toc a{text-decoration:none}
+    .research-toc a:hover{text-decoration:underline}
+    .research .verdict{background:var(--ink);color:var(--paper);border-radius:6px;padding:32px 36px;margin-top:36px}
+    .research .verdict h2{font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+    .research .verdict p{margin:0;font-size:17px;line-height:1.6;max-width:760px}
+    .research .verdict strong{color:var(--accent)}
+    .research-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:28px;align-items:start}
+    .research-cards .latest-card p:not(.eyebrow){font-size:14.5px;line-height:1.6;color:var(--muted);margin:0}
+    .tag-good{color:#446325}.tag-warn{color:#92400e}.tag-bad{color:#991b1b}
+    .research section{padding-top:64px}
+    .research h2{font-size:clamp(30px,3.8vw,44px);margin-bottom:16px}
+    .research .sec-sub{color:var(--muted);max-width:700px;font-size:18px;margin-bottom:32px}
+    .research h3{font-size:21px;font-weight:600;letter-spacing:-.02em;line-height:1.4;margin:32px 0 10px}
+    .research p{margin:0 0 12px}
+    .research ul,.research ol{margin:8px 0 14px;padding-left:22px}
+    .research li{margin:5px 0}
+    .research li::marker{color:#6b8334}
+    .research code{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:.86em;background:#e9eae2;padding:.12em .35em;border-radius:4px}
+    .research pre{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px;line-height:1.6;background:var(--ink);color:var(--paper);padding:20px;border-radius:6px;overflow:auto;white-space:pre-wrap}
+    .research pre code{background:none;padding:0;color:inherit}
+    .table-wrap{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+    .research table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.55}
+    .research th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:#eeeee4;padding:11px 13px;border-bottom:1px solid var(--line)}
+    .research td{padding:12px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+    .research tr:last-child td{border-bottom:none}
+    .badge{display:inline-flex;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+    .b-yes{background:#e7ebdc;color:#446325}.b-no{background:#fef2f2;color:#991b1b}.b-part{background:#fef3c7;color:#92400e}
+    .callout{border-radius:6px;padding:16px 18px;margin:18px 0;font-size:14.5px;line-height:1.6}
+    .callout-amber{background:#fef3c7;border:1px solid #e5d3a1}
+    .callout-green{background:#e7ebdc;border:1px solid #c3d48a}
+    .flow{display:flex;gap:0;flex-wrap:wrap;align-items:stretch;margin:18px 0}
+    .flow-step{flex:1 1 140px;background:#fff;border:1px solid var(--line);padding:14px;position:relative}
+    .flow-step:first-child{border-radius:6px 0 0 6px}.flow-step:last-child{border-radius:0 6px 6px 0}
+    .flow-step b{display:block;font-size:13px}.flow-step span{font-size:13px;color:var(--muted);line-height:1.5;display:block;margin-top:4px}
+    .flow-step::after{content:"\2192";position:absolute;right:-10px;top:50%;transform:translateY(-50%);background:var(--paper);width:20px;height:20px;display:grid;place-items:center;border-radius:50%;font-weight:700;z-index:1;color:var(--muted)}
+    .flow-step:last-child::after{display:none}
+    .option{border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:18px 0;background:#fff}
+    .option-head{padding:20px 22px 16px;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+    .option-head h3{margin:2px 0 4px;font-size:19px}
+    .option-head p{color:var(--muted);font-size:14.5px;margin:0;max-width:620px}
+    .rank{font-family:var(--serif);font-size:36px;line-height:1;font-weight:400;color:#6b7e41}
+    .option-body{padding:6px 22px 18px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+    .research details{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 16px;margin:12px 0}
+    .research summary{cursor:pointer;font-weight:600;padding:10px 0;min-height:44px}
+    .research .source{font-size:12.5px;color:var(--muted);word-break:break-word}
+    .research .source a{color:var(--muted)}
+    .checklist{list-style:none;padding:0;margin:0}
+    .checklist li{padding:11px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:28px 1fr;gap:10px}
+    .checklist li:last-child{border-bottom:none}
+    .check{width:22px;height:22px;border-radius:50%;background:#e7ebdc;color:#446325;display:grid;place-items:center;font-weight:800;font-size:13px;margin-top:1px}
+    .research-back{margin-top:64px;border-top:1px solid var(--line);padding-top:24px}
+    .footer-note{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13px;line-height:1.6}
+    @media(max-width:900px){.research-cards{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
+    @media(max-width:700px){
+      .research-cards{grid-template-columns:1fr}
+      table,thead,tbody,tr,th,td{display:block;width:100%}
+      thead{display:none}
+      tr{padding:10px 0;border-bottom:1px solid var(--line)}
+      td{border:none;padding:5px 13px}
+      td:first-child{font-weight:700;padding-top:8px}
+      .flow{flex-direction:column}.flow-step{border-radius:6px !important;margin-bottom:6px}
+      .flow-step::after{right:50%;top:auto;bottom:-13px;transform:translateX(50%) rotate(90deg)}
+    }
+    @media(max-width:640px){.research{padding-block:48px 56px}.research .verdict{padding:24px}}
+    </style>
+</head>
+<body id="page-top">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+        <div class="container nav-wrap">
+            <a class="brand" href="#page-top"><img class="brand-mark" src="/assets/logo-seal-compact.svg?v=3" width="44" height="44" alt="" aria-hidden="true"><span>Soon F. Hoo</span></a>
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu <span aria-hidden="true">+</span></button>
+            <nav id="site-nav" aria-label="Main navigation"><a href="/#about">About</a><a href="/#patents">Patents</a><a href="/#studio">Studio</a><a href="/#resume">Résumé</a><a href="/#latest">Latest</a><a href="/#research" aria-current="location">Research</a><a href="/#contact">Connect</a></nav>
+        </div>
+    </header>
+    <main id="main">
+        <article class="research container">
+            <p class="eyebrow">Research / AI agents</p>
+            <h1>How Grokbot can pass a coding job to <em>another agent</em></h1>
+            <p class="section-intro">For GrokChief (Grok-based) handing work to gptdev (GPT/Codex) or a Claude-based agent — on a small self-hosted team with Gitea and an AWS deploy. The short answer is not a protocol. It&rsquo;s a file, a branch, and an Issue.</p>
+            <p class="research-meta"><span>Nov 11, 2026</span><span>Gitea + AWS host + private board</span><span>No native Grok &rarr; GPT/Claude handoff exists</span><span>Sources linked for every confirmed claim</span></p>
+            <nav class="research-toc" aria-label="On this page"><a href="#verdict">Verdict</a><a href="#grok">What Grok offers</a><a href="#standards">Standards</a><a href="#practical">Practical method</a><a href="#plan">Plan</a><a href="#open">Open questions</a></nav>
+
+            <div class="verdict" id="verdict">
+                <h2>Bottom line</h2>
+                <p>There is <strong>no out-of-the-box Grok &rarr; GPT/Claude handoff</strong>. Every workable route is either <strong>(a) a shared artefact both agents can read/write</strong> — repo, branch, task file, Issue — or <strong>(b) a wrapper/framework you build around both agents</strong>. Start with (a). Do not start with A2A.</p>
+            </div>
+
+            <div class="research-cards">
+                <article class="latest-card"><p class="eyebrow tag-good">Do now &mdash; Option 1</p><h3>Git + Issue + handoff file</h3><p>Branch + <code>tasks/active/*.md</code> + Gitea Issue/PR + <code>AGENTS.md</code>. Works today, no new services, no vendor lock-in.</p></article>
+                <article class="latest-card"><p class="eyebrow tag-warn">Do next &mdash; Option 2</p><h3>Shared Gitea MCP server</h3><p>Same handoff, but machine-readable: both agents create Issues, branches and PRs through the same MCP tools.</p></article>
+                <article class="latest-card"><p class="eyebrow tag-bad">Later &mdash; Option 3</p><h3>A2A or one orchestrator SDK</h3><p>Future-proof, highest effort. Requires wrapping Grok — xAI has no confirmed native A2A support.</p></article>
+            </div>
+
+            <section id="protocols">
+                <p class="eyebrow">The distinction that prevents wasted work</p>
+                <h2>Three protocols, three different jobs</h2>
+                <p class="sec-sub">Confusing these is the most common dead end. Only one of them is actually agent &rarr; agent.</p>
+                <div class="table-wrap"><table><thead><tr><th>Protocol</th><th>Direction</th><th>What it does</th><th>Direct GrokChief &rarr; gptdev?</th></tr></thead><tbody>
+                    <tr><td><strong>MCP</strong> — Model Context Protocol</td><td>Agent &rarr; tools / data</td><td>Gives an agent tools (e.g. create Issue, create PR). No notion of another agent, no task lifecycle between agents.</td><td><span class="badge b-no">No — shared tools only</span></td></tr>
+                    <tr><td><strong>A2A</strong> — Agent2Agent</td><td>Agent &rarr; agent (peer)</td><td>Discovery via Agent Card, <code>message/send</code> over HTTPS, Task lifecycle, Artifacts back. The real peer standard.</td><td><span class="badge b-part">In principle — wrap both sides</span></td></tr>
+                    <tr><td><strong>ACP</strong> — Agent Client Protocol</td><td>Editor / host &rarr; agent</td><td>A host (Zed, JetBrains, a script) drives Grok Build, Codex and Claude Code side-by-side. Agents don&rsquo;t talk to each other through it.</td><td><span class="badge b-no">No — host mediates</span></td></tr>
+                    <tr><td><strong>OpenAI Agents SDK handoffs</strong></td><td>Agent &rarr; agent, in-process</td><td><code>transfer_to_&lt;name&gt;</code> tool switches the active <code>Agent</code> inside one Python/TS program run by one <code>Runner</code>.</td><td><span class="badge b-no">No for existing CLIs</span></td></tr>
+                    <tr><td><strong>Subagents</strong> (Grok / Claude / Codex)</td><td>Parent &rarr; child, same vendor</td><td>Child session with its own context returns a summary to its parent. Same process, same vendor.</td><td><span class="badge b-no">No — same-vendor only</span></td></tr>
+                </tbody></table></div>
+                <p class="source" style="margin-top:10px">Sources: A2A spec v1.0.0 — <a href="https://a2a-protocol.org/latest/specification/">a2a-protocol.org/latest/specification</a> &middot; MCP spec 2026-07-28 — <a href="https://modelcontextprotocol.io/specification/2026-07-28">modelcontextprotocol.io/specification/2026-07-28</a> &middot; ACP overview — <a href="https://agentclientprotocol.com/protocol/v2/overview">agentclientprotocol.com/protocol/v2/overview</a> (updated 2026-11-09) &middot; OpenAI Agents SDK handoffs — <a href="https://openai.github.io/openai-agents-python/handoffs/">openai.github.io/openai-agents-python/handoffs</a></p>
+            </section>
+
+            <section id="grok">
+                <p class="eyebrow">1 &mdash; xAI / Grok</p>
+                <h2>What Grok actually offers — and what it doesn&rsquo;t</h2>
+                <p class="sec-sub">Confirmed from official xAI docs read live on 2026-11-11, unless marked secondary. The pattern: plenty of hooks to build a handoff on, no handoff itself.</p>
+
+                <div class="table-wrap"><table><thead><tr><th>Mechanism</th><th>Confirmed?</th><th>What it is</th><th>Hands off to another vendor?</th></tr></thead><tbody>
+                    <tr><td>Grok API function calling</td><td><span class="badge b-yes">Yes — official</span></td><td>Model returns a tool-call request; <em>your</em> code executes it. Built-in tools (Web Search, X Search, Code Interpreter, Image Generation, Collections Search) run server-side on xAI.</td><td>No — hook only. A function like <code>hand_off_to_gptdev(task_json)</code> is code you write; the API doesn&rsquo;t deliver or track it.</td></tr>
+                    <tr><td>Grok API Remote MCP Tools</td><td><span class="badge b-yes">Yes — via secondary summary</span></td><td>Add <code>{"type":"mcp","server_url":&hellip;}</code> to a Responses request; xAI connects server-side. Streamable HTTP / SSE only, no stdio; server must be publicly reachable.</td><td>No — gives Grok tools, not a peer agent.</td></tr>
+                    <tr><td>Grok Build subagents</td><td><span class="badge b-yes">Yes — verified live</span></td><td>Independent child sessions, own context, return a summary. Types: <code>general-purpose</code>, <code>explore</code> (read-only), <code>plan</code> (no shell/edits). Custom types in <code>.grok/agents/</code>.</td><td>No — Grok children of a Grok parent, same process/repo.</td></tr>
+                    <tr><td>Grok Build headless <code>grok -p</code></td><td><span class="badge b-yes">Yes — verified live</span></td><td><code>grok -p "&hellip;"</code> and <code>--output-format streaming-json</code>. Docs: &ldquo;ideal for scripts, automations, or integration into other apps.&rdquo;</td><td>Indirect — enables script-driven handoff (see Plan).</td></tr>
+                    <tr><td>Grok Build MCP servers</td><td><span class="badge b-yes">Yes — verified live</span></td><td>Local stdio + remote HTTP. <code>grok mcp add</code> / <code>list</code> / <code>doctor</code>; project scope writes <code>.grok/config.toml</code>. Also loads <code>~/.claude.json</code>, <code>.cursor/mcp.json</code>, <code>.mcp.json</code>.</td><td>Indirect — shared tools only.</td></tr>
+                    <tr><td>Grok Build ACP — <code>grok agent stdio</code></td><td><span class="badge b-yes">Yes — verified live (overview)</span></td><td>Editor/host drives Grok Build over JSON-RPC on stdio.</td><td>No — host &rarr; agent.</td></tr>
+                    <tr><td><code>AGENTS.md</code> support</td><td><span class="badge b-yes">Yes</span></td><td>Grok Build reads repo instruction files — same convention Codex uses. This is the shared-instruction layer for the practical method.</td><td>—</td></tr>
+                    <tr><td>A2A support</td><td><span class="badge b-no">Not confirmed</span></td><td>No official xAI page found announcing A2A server/client support, an agent card, or a handoff API. Tracker lists xAI as MCP: Supported, A2A: Not Confirmed.</td><td>Only via third-party wrapper (e.g. Mastra).</td></tr>
+                    <tr><td>Native cross-vendor handoff API</td><td><span class="badge b-no">No evidence found</span></td><td>—</td><td>—</td></tr>
+                </tbody></table></div>
+
+                <div class="callout callout-amber"><strong>Don&rsquo;t quote these as official yet:</strong> <code>grok-code-fast-1</code> (256K context, $0.20/M in / $1.50/M out / $0.02/M cached, ~190 tok/s) and <code>grok-build-0.1</code> ($1.00/M in / $2.00/M out, 256K) come from aggregators/secondary write-ups only — not verified live on xAI&rsquo;s models/pricing pages in this run. Re-check <code>docs.x.ai</code> before budgeting. Same caution for the subagent concurrency cap: launch coverage says up to 8, a later source-code analysis claims 32, and the official subagents page states no numeric cap. Arena Mode was described in May 2026 coverage but later reports say the term no longer appears in docs.x.ai — treat as unverified / likely removed.</div>
+
+                <p class="source">Sources: Tools overview — <a href="https://docs.x.ai/developers/tools/overview?ref=thelgtm.dev">docs.x.ai/developers/tools/overview</a> (official, updated 2026-10-10) &middot; Grok Build overview — <a href="https://docs.x.ai/build/overview">docs.x.ai/build/overview</a> (verified live) &middot; Subagents — <a href="https://docs.x.ai/build/features/subagents">docs.x.ai/build/features/subagents</a> (verified live, updated 2026-07-21) &middot; MCP servers — <a href="https://docs.x.ai/build/features/mcp-servers">docs.x.ai/build/features/mcp-servers</a> (verified live, updated 2026-07-02) &middot; Remote MCP summary — <a href="https://ai-x.chat/docs/remote-mcp-tools/">ai-x.chat/docs/remote-mcp-tools</a> (reviewed 2026-11-07) &middot; Protocol tracker — <a href="https://agenticplug.ai/current-state-of-agentic-commerce">agenticplug.ai/current-state-of-agentic-commerce</a> (verified Nov 2026) &middot; Grok A2A via Mastra (third-party, not xAI-native) — <a href="https://skalablog.com/p/grok-a2a-connect-grok-to-your-own-agents/">skalablog.com/p/grok-a2a-connect-grok-to-your-own-agents</a></p>
+
+                <details><summary>Install &amp; headless commands (verified live)</summary>
+                    <pre><code>curl -fsSL https://x.ai/cli/install.sh | bash
+cd your-project; grok            # first launch: browser auth, or XAI_API_KEY
+grok -p "Explain this codebase"
+grok -p "..." --output-format streaming-json
+grok inspect                     # config, instructions, skills, MCP servers
+grok mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem /path/to/dir
+grok mcp add --transport http linear https://mcp.linear.app/mcp</code></pre>
+                    <p style="color:var(--muted);font-size:14px">Grok Build source was published 2026-07-15 at github.com/xai-org/grok-build under Apache 2.0, with issues/PRs disabled and external contributions not accepted (secondary source) — treat as source-available, not community-governed. Docs examples now use Grok 4.7.</p>
+                </details>
+            </section>
+
+            <section id="standards">
+                <p class="eyebrow">2 &mdash; Standards in detail</p>
+                <h2>How each protocol would work, mechanically</h2>
+
+                <h3>A2A — the actual agent &rarr; agent standard</h3>
+                <ol>
+                    <li><strong>Discovery:</strong> remote agent publishes an <strong>Agent Card</strong> (JSON) at <code>/.well-known/agent-card.json</code> — identity, skills, endpoint, auth. v1.0 adds signed cards (JWS).</li>
+                    <li><strong>Send:</strong> JSON-RPC 2.0 <code>message/send</code> over HTTPS (v1.0 also binds gRPC and HTTP+JSON/REST), auth per the card (OAuth 2.0, bearer, API key, mTLS).</li>
+                    <li><strong>Work:</strong> remote opens a <strong>Task</strong> — submitted &rarr; working &rarr; input-required / completed / failed / cancelled / rejected — and runs opaquely; the caller sees nothing of its internals.</li>
+                    <li><strong>Return:</strong> poll <code>tasks/get</code>, stream via SSE, or webhook push; completion returns <strong>Artifacts</strong> (files, structured data, text).</li>
+                </ol>
+                <p><strong>Both sides must:</strong> be (or be wrapped as) an A2A server/client — HTTPS endpoint, agent card, JSON-RPC methods, task lifecycle, advertised auth. In practice: an SDK/framework (Google ADK, LangGraph, CrewAI, Semantic Kernel, Mastra, or the a2aproject/A2A SDKs). <strong>Maturity:</strong> announced by Google 2025-04-09 with 50+ partners; donated to the Linux Foundation June 2025; v1.0.0 is the latest released version on the spec site (secondary sources date it 2026-03-12 and April 2026 — version is settled, exact date is not); native in Azure AI Foundry, Copilot Studio, Bedrock AgentCore, Google Cloud — but most use outside those platforms is still PoC-level per analysts.</p>
+
+                <h3>MCP — agent &rarr; tools</h3>
+                <p>Host (Grok Build / Claude Code / Codex) &rarr; Client (one connection per server) &rarr; Server exposing <strong>tools</strong> (model-controlled), <strong>resources</strong> (app-controlled context) and <strong>prompts</strong> (user-controlled templates). JSON-RPC 2.0 over stdio (local) or Streamable HTTP (remote); the 2026-07-28 revision made the core stateless. Mature, de-facto standard. <strong>Security note from the spec:</strong> treat tool descriptions / server instructions as untrusted unless the server is trusted; require consent for write actions — relevant for a write-capable Gitea MCP server.</p>
+
+                <h3>ACP — host &rarr; agent</h3>
+                <p>Created by Zed Industries (Aug 2025), co-developed with JetBrains from Oct 2025; registry launched Jan 2026. Flow: <code>initialize</code> &rarr; <code>authenticate</code> &rarr; <code>session/new</code> &rarr; <code>session/prompt</code> &harr; <code>session/update</code>. Stable wire protocol is <strong>v1</strong>; v2 is draft. Local transport is stdio only — remote HTTP/WebSocket is an RFD / work in progress, not normative. Grok Build is native (<code>grok agent stdio</code>); Claude Code and Codex connect via adapters (<code>codex-acp</code> for Codex). Useful as an orchestration surface for a human or script — not an agent &rarr; agent channel.</p>
+
+                <h3>OpenAI Agents SDK handoffs &amp; same-vendor subagents</h3>
+                <p>SDK: <code>handoffs=[billing_agent, refund_agent]</code> (or <code>handoff()</code> with <code>on_handoff</code>, <code>input_type</code>, <code>input_filter</code>) injects a <code>transfer_to_&lt;name&gt;</code> tool; the Runner switches the active agent and by default passes full history. <code>Agent.as_tool()</code> is the manager-pattern alternative where control returns to the caller. Handoffs stay within a single run; both agents must be <code>Agent</code> objects in the same program. Claude Code subagents (Agent tool, formerly Task; <code>.claude/agents/</code> Markdown + YAML; built-ins Explore / Plan / general-purpose; one level deep by default) and Codex subagents (roles default / worker / explorer; TOML in <code>.codex/agents/</code>; <code>codex exec</code> for scripted runs) are likewise same-session only. <em>Unverified:</em> the Responses API multi-agent beta (<code>multi_agent.enabled</code>, <code>spawn_agent</code> etc., default 3 concurrent) is secondary-only in this run.</p>
+                <p class="source">Sources: Claude Code subagents — <a href="https://code.claude.com/docs/en/sub-Agents">code.claude.com/docs/en/sub-Agents</a> &middot; Codex subagents (secondary summary) — <a href="https://docs.arantic.com/codex/subagents">docs.arantic.com/codex/subagents</a> &middot; ACP remote transport RFD — <a href="https://agentclientprotocol.com/rfds/streamable-http-websocket-transport">agentclientprotocol.com/rfds/streamable-http-websocket-transport</a></p>
+            </section>
+
+            <section id="practical">
+                <p class="eyebrow">3 &mdash; What works between any two agents</p>
+                <h2>The practical method: the handoff is a file, not a chat message</h2>
+                <p class="sec-sub">Chat history does not transfer between vendors. A Markdown file in the repo does. Git is the one interface every coding agent already has — the diff <em>is</em> the context.</p>
+
+                <div class="flow" aria-label="Handoff flow">
+                    <div class="flow-step"><b>1 &middot; Branch</b><span>GrokChief works on <code>agent/grokchief-&lt;slug&gt;</code>, never on <code>main</code>. Pushes.</span></div>
+                    <div class="flow-step"><b>2 &middot; Task file</b><span>Writes <code>tasks/active/&lt;date&gt;-&lt;slug&gt;.md</code> with the full payload below.</span></div>
+                    <div class="flow-step"><b>3 &middot; Issue</b><span>Opens a Gitea Issue: owner = receiver, label <code>ready-for-gptdev</code>, links branch + file.</span></div>
+                    <div class="flow-step"><b>4 &middot; Announce</b><span>Posts on the board: Issue #, branch. Chat announces — the repo holds the truth.</span></div>
+                    <div class="flow-step"><b>5 &middot; Work &amp; PR</b><span>Receiver checks out the branch, works, validates, sets <code>ready-for-review</code>, opens PR.</span></div>
+                    <div class="flow-step"><b>6 &middot; Human merges</b><span>Review in Gitea; merge to <code>main</code>; deploy to AWS only from <code>main</code>.</span></div>
+                </div>
+
+                <div class="two">
+                    <div>
+                        <h3 style="margin-top:0">Shared board = Gitea Issues</h3>
+                        <p>One Issue per task. Labels: <code>handoff</code>, <code>ready-for-gptdev</code> / <code>ready-for-claude</code>, <code>in-progress</code>, <code>needs-review</code>, <code>blocked</code>. Assignee = agent name. Comments = running log. Receiver polls open Issues with its label (git / Gitea API, or MCP in Option 2) and claims by commenting / moving the label.</p>
+                        <p><strong>Limitation:</strong> Gitea has no &ldquo;assign to an AI and wake it.&rdquo; The receiver must be running — a cron/headless loop or an operator starting it — and polling. Labels are convention, not enforcement.</p>
+                        <h3>AGENTS.md — the shared contract</h3>
+                        <p>A short root <code>AGENTS.md</code> every agent reads on entry: project overview, exact install/test/lint/build commands, conventions, boundaries (never edit <code>.env</code>, never deploy to prod), git/PR workflow, and the handoff protocol. Grok Build, Codex, Cursor, Gemini CLI, Aider and OpenCode read <code>AGENTS.md</code>; Claude Code reads <code>CLAUDE.md</code> — add one line, <code>@AGENTS.md</code>, as a pointer. Keep it short; route to detail files.</p>
+                        <p><strong>Status strings (use literally, so grep/scripts can find work):</strong> Planner &rarr; Coder creates the task file; Coder &rarr; Reviewer sets <code>status: ready-for-review</code>; Reviewer &rarr; Planner sets <code>approved</code> or <code>needs-revision</code> with specific feedback.</p>
+                    </div>
+                    <div>
+                        <h3 style="margin-top:0">Minimum information — enforce this checklist</h3>
+                        <ul class="checklist">
+                            <li><span class="check">&#10003;</span><span><strong>Goal</strong> — one sentence, the outcome. Without it the receiver optimises for the wrong thing.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Context / why</strong> — decisions, Issue/PR links, what was already tried or ruled out.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Scope</strong> — files/functions in play <em>and</em> out of scope.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Starting point</strong> — branch name + base commit SHA. &ldquo;Latest main&rdquo; is ambiguous.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Match example</strong> — a file that already does it right; the cheapest quality lever.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Constraints</strong> — stack, versions, style, boundaries (no secrets, no prod, no <code>.env</code>).</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Tests / validation</strong> — exact commands and how to run them.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Acceptance criteria</strong> — testable &ldquo;done when&rdquo;, not &ldquo;make it better&rdquo;.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Evidence expected back</strong> — files changed, commands + results, checks not run + reason, assumptions, risks.</span></li>
+                            <li><span class="check">&#10003;</span><span><strong>Owner + status + next action</strong> (+ deadline/priority if any).</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Handoff template — commit as <code>tasks/TEMPLATE.md</code></h3>
+                <pre id="tpl"><code># Handoff: &lt;title&gt;
+Goal: [one sentence, the outcome — not the method]
+Scope: [exact files / functions / endpoints in play]
+Out of scope: [what NOT to touch]
+Approach: [pattern, limits, logging, conventions to follow]
+Match: [path/to/a/file that does it right]
+Context: [why this exists, links to Issue/PR, relevant decisions]
+Branch: [branch name, base commit SHA]
+Done when / Acceptance criteria: [tests passing, commands to run, human reviews diff]
+Evidence on completion: [files changed, validation commands + results,
+  checks NOT run + reason, assumptions, risks, follow-up]
+Status: [todo | in-progress | ready-for-review | approved | needs-revision]
+Owner: [agent name, e.g. gptdev]  |  Previous owner: [e.g. GrokChief]</code></pre>
+                <p><a class="button" href="#" id="copyBtn">Copy template</a> <span id="copyMsg" style="font-size:13px;color:var(--muted)"></span></p>
+                <p class="source">Template sources (community practice, no single official standard): <a href="https://sublimecoding.com/blog/coding-agent-rollout-engineering-team">sublimecoding.com/blog/coding-agent-rollout-engineering-team</a> &middot; <a href="https://thepromptshelf.dev/blog/writing-effective-agentsmd-guide/">thepromptshelf.dev/blog/writing-effective-agentsmd-guide</a> &middot; <a href="https://codeharness.kuckit.dev/agents-md-template/">codeharness.kuckit.dev/agents-md-template</a> &middot; Gitea workflow: <a href="https://www.voodoo.business/blog/2026/11/05/using-your-self-hosted-gitea-server/">voodoo.business/blog/2026/11/05/using-your-self-hosted-gitea-server</a></p>
+
+                <div class="callout callout-green"><strong>Rule for the board/chat:</strong> chat is the notification layer only — announce, clarify, report completion. It is ephemeral and unversioned; a fresh agent session can&rsquo;t read it as state. Never put the only copy of a task in chat. <strong>Chat announces, the repo holds the truth.</strong></div>
+            </section>
+
+            <section id="plan">
+                <p class="eyebrow">4 &mdash; Recommendation for this team</p>
+                <h2>Ranked plan: practicality first</h2>
+                <p class="sec-sub">A handoff that depends on a protocol neither agent natively speaks will not happen. A handoff that is a file + a branch will.</p>
+
+                <article class="option">
+                    <div class="option-head"><div><p class="eyebrow tag-good" style="margin-bottom:8px">Option 1 &middot; Recommended first</p><h3>Git + Gitea Issue/PR + file handoff</h3><p><code>tasks/</code> + <code>AGENTS.md</code>. Highest practicality — works today, no new services, no new protocol, no lock-in.</p></div><div class="rank">01</div></div>
+                    <div class="option-body">
+                        <ol>
+                            <li>Add a root <code>AGENTS.md</code> (project, exact test/build/deploy commands, boundaries, &ldquo;work on a branch, human merges&rdquo;, handoff protocol + <code>tasks/</code> convention). Add one-line <code>CLAUDE.md</code> (<code>@AGENTS.md</code>).</li>
+                            <li>Add <code>tasks/active/</code> and <code>tasks/done/</code>; commit the template as <code>tasks/TEMPLATE.md</code>.</li>
+                            <li>Fix conventions in <code>AGENTS.md</code>: branch <code>agent/&lt;agent&gt;-&lt;slug&gt;</code> (e.g. <code>grokchief/add-login</code>); labels <code>handoff</code>, <code>ready-for-gptdev</code> / <code>ready-for-claude</code>, <code>in-progress</code>, <code>ready-for-review</code>, <code>blocked</code>; status strings <code>todo / in-progress / ready-for-review / approved / needs-revision</code>.</li>
+                            <li><strong>GrokChief handoff procedure</strong> (in <code>AGENTS.md</code>): finish on its branch &rarr; push &rarr; write <code>tasks/active/&lt;date&gt;-&lt;slug&gt;.md</code> &rarr; open/update Issue (owner = receiver, label <code>ready-for-&lt;agent&gt;</code>, link branch + file) &rarr; announce on the board with Issue # + branch.</li>
+                            <li><strong>Receiver intake</strong> (in <code>AGENTS.md</code>): read <code>AGENTS.md</code> &rarr; list open Issues labelled <code>ready-for-&lt;name&gt;</code> &rarr; read task file &rarr; <code>git fetch &amp;&amp; git checkout &lt;branch&gt;</code> (or branch off it) &rarr; work &rarr; run validation &rarr; update task file (evidence + <code>ready-for-review</code>) &rarr; push &rarr; open/update PR &rarr; comment on Issue &rarr; announce.</li>
+                            <li>Run unattended legs headless: Grok Build <code>grok -p "&lt;prompt&gt;"</code> (verified live); Codex <code>codex exec "&lt;prompt&gt;"</code> (secondary source) — or an operator starts each agent with the Issue/task-file path as its prompt. Human merges to <code>main</code>; deploy to AWS only from <code>main</code>, existing path unchanged.</li>
+                        </ol>
+                        <p><strong>Limitations:</strong> async only (no wake-up without a poller or human); no live progress streaming; relies on agents following the written convention — keep the template + <code>AGENTS.md</code> short and checkable; merge conflicts if two agents touch the same files (mitigate: worktrees / one branch per task); no context transfer beyond what&rsquo;s written in the file — by design, and also its strength.</p>
+                    </div>
+                </article>
+
+                <article class="option">
+                    <div class="option-head"><div><p class="eyebrow" style="margin-bottom:8px">Option 2 &middot; Next</p><h3>Shared MCP server for Gitea (+ board)</h3><p>Medium-high practicality. Builds on Option 1; makes the handoff machine-readable so agents act on Gitea without leaving their CLI. Do after Option 1 works.</p></div><div class="rank">02</div></div>
+                    <div class="option-body">
+                        <ol>
+                            <li>Run a self-hosted Gitea MCP server on the Gitea host/network (stdio locally, or Streamable HTTP on your private network behind auth). Either write a small Python/TS server against the Gitea REST API (tools: <code>list_issues</code>, <code>create_issue</code>, <code>create_branch</code>, <code>create_pull_request</code>, <code>get_pull_request</code>, <code>merge_pull_request</code>, <code>dispatch_workflow</code>), or evaluate a third-party integration — e.g. Composio&rsquo;s Gitea MCP for Codex (Create Branch / PR, Get PR, Merge PR, Dispatch Workflow, Get Commit; third-party, not official Gitea — check auth/pricing first).</li>
+                            <li>Give both agents the <em>same</em> server. Grok Build: <code>grok mcp add --transport http gitea https://&lt;internal-host&gt;/mcp --header "Authorization: Bearer ${GITEA_TOKEN}"</code>, or project-scoped in <code>.grok/config.toml</code>. Claude/Codex: same server in their MCP config — one project <code>.mcp.json</code> can serve several agents (Grok Build reads it too). Start read-only; add write tools behind an allowlist once trusted.</li>
+                            <li>Keep Option 1&rsquo;s file + Issue as the source of truth. MCP is the <em>action</em> layer, not a replacement for the written handoff.</li>
+                            <li>Add a Gitea Actions workflow (<code>.gitea/workflows/</code>) running tests on every PR, so incoming work is checked automatically before human merge.</li>
+                        </ol>
+                        <p><strong>Limitations:</strong> you host, secure and maintain the server (auth, token scoping, allowlist — a write-capable MCP server is powerful; a compromised/prompt-injected agent could create/merge PRs). No official Gitea MCP server was verified in this run — integrations are third-party or DIY, so budget maintenance. Remote MCP from the xAI <em>API</em> needs a publicly reachable Streamable HTTP/SSE endpoint (no stdio); the Grok Build <em>CLI</em> can use local stdio. MCP still doesn&rsquo;t notify the receiver — keep Option 1&rsquo;s announcement/polling.</p>
+                        <p class="source">Source: <a href="https://composio.dev/toolkits/gitea/framework/codex">composio.dev/toolkits/gitea/framework/codex</a> (third-party)</p>
+                    </div>
+                </article>
+
+                <article class="option">
+                    <div class="option-head"><div><p class="eyebrow" style="margin-bottom:8px">Option 3 &middot; Later / experimental</p><h3>A2A — or rebuild both agents in one orchestrator SDK</h3><p>Lowest practicality today for a small self-hosted team; highest long-term interoperability. Do not start here.</p></div><div class="rank">03</div></div>
+                    <div class="option-body">
+                        <p><strong>A2A route:</strong></p>
+                        <ol>
+                            <li>Wrap each agent as an A2A server: a small Python/TS service (A2A SDKs from a2aproject/A2A, or Google ADK / LangGraph / Mastra) exposing <code>/.well-known/agent-card.json</code> (skills e.g. <code>implement-task</code>), <code>message/send</code>, <code>tasks/get</code>, SSE streaming, returning Artifacts. The wrapper translates A2A task &rarr; prompt + branch + task file for <code>grok -p</code> / <code>codex exec</code> / <code>claude -p</code>, runs it, and translates the diff/PR back into an Artifact.</li>
+                            <li>Host both wrappers on your private network / AWS host behind HTTPS + auth (OAuth 2.0 / API key / mTLS per the card). Each wrapper also acts as A2A client to the other.</li>
+                            <li>Keep Option 1 underneath: the A2A payload <em>is</em> the &sect;3 checklist handoff; the Artifact is the branch/PR reference + evidence. A2A is the envelope, git is still the payload.</li>
+                        </ol>
+                        <p><strong>Alternative orchestrator route:</strong> rebuild both agents as <code>Agent</code> objects in one OpenAI Agents SDK (or LangGraph/CrewAI) program with native <code>handoffs=[...]</code> — in-process handoffs with tracing/guardrails, but you lose the Grok Build / Codex / Claude Code CLIs and re-implement their tool loops.</p>
+                        <p><strong>Limitations:</strong> no native Grok A2A (&sect;1) — you build and maintain both wrappers; A2A adoption outside enterprise platforms is still PoC-level; auth, lifecycle, retries, timeouts and hours-long coding tasks are all your problem; debugging spans two services + two CLIs + git. Worth it only when handoffs are frequent, multi-hop, or need machine-readable discovery/routing a board + labels can&rsquo;t express.</p>
+                    </div>
+                </article>
+
+                <div class="callout callout-amber"><strong>What not to do:</strong> don&rsquo;t try to make Grok Build, Claude Code or Codex subagents hand off to each other (same-vendor, same-process only). Don&rsquo;t treat ACP as agent &rarr; agent (it&rsquo;s host &rarr; agent). Don&rsquo;t treat MCP as a handoff (it&rsquo;s a shared tool layer).</div>
+            </section>
+
+            <section id="open">
+                <p class="eyebrow">Honest gaps</p>
+                <h2>Could not verify / open questions</h2>
+                <ol>
+                    <li><strong>Model pricing/context</strong> for <code>grok-code-fast-1</code> / <code>grok-build-0.1</code> — secondary only; re-check xAI&rsquo;s official pages before budgeting.</li>
+                    <li><strong>Subagent cap</strong> — 8 (launch) vs 32 (source analysis); docs state no cap. Version-dependent.</li>
+                    <li><strong>Arena Mode</strong> — described May 2026; later reports say it no longer appears in docs.x.ai. Unverified / likely removed.</li>
+                    <li><strong>No native xAI A2A</strong> is absence of evidence, not proof of absence — three secondary sources say &ldquo;not confirmed / not used in xAI&rsquo;s own products,&rdquo; and no official page was found. Re-check docs.x.ai before building wrappers; native support would make Option 3 much cheaper.</li>
+                    <li><strong>Responses API multi-agent beta</strong> — secondary only, not verified against official OpenAI docs.</li>
+                    <li><strong>Headless flags</strong> — <code>grok -p</code> verified live; <code>codex exec</code> is secondary; the exact Claude Code non-interactive flag was not verified — check <code>claude --help</code> at implementation time.</li>
+                    <li><strong>No official Gitea MCP server</strong> verified — available integrations are third-party (e.g. Composio) or DIY. Verify auth model, token scope and maintenance before adopting.</li>
+                    <li><strong>A2A v1.0 date</strong> — spec site lists 1.0.0 as latest released; secondary sources variously say 2026-03-12 and April 2026. Version settled, date not material.</li>
+                    <li><strong>Grok Build pricing / plan access</strong> — not verified; secondary sources conflict. Check x.ai/grok and docs.x.ai before provisioning.</li>
+                    <li><strong>Your actual setup was not inspected</strong> — Gitea version, whether Gitea Actions is enabled, the AWS deploy path, and how GrokChief/gptdev are currently launched (CLI vs API vs chat) were beyond the mission summary. Recommendations assume CLI/headless agents on a host that can reach Gitea; if GrokChief is only a grok.com chat with no shell, Option 1 still works (a human/operator runs the git steps) but Option 2&rsquo;s local MCP and headless loops don&rsquo;t apply directly.</li>
+                </ol>
+            </section>
+
+            <section id="sources">
+                <p class="eyebrow">Sources</p>
+                <h2 style="font-size:28px">Full source list</h2>
+                <p style="color:var(--muted);font-size:14px">Verified live = read in the research browser on 2026-11-11. Index = via search/fetch on 2026-11-11. Every URL below is carried from the research report.</p>
+                <ul style="font-size:14px;line-height:1.7">
+                    <li>xAI Tools Overview (official) — <a href="https://docs.x.ai/developers/tools/overview?ref=thelgtm.dev">docs.x.ai/developers/tools/overview</a></li>
+                    <li>Grok Build overview (official, verified live) — <a href="https://docs.x.ai/build/overview">docs.x.ai/build/overview</a></li>
+                    <li>Grok Build Subagents (official, verified live) — <a href="https://docs.x.ai/build/features/subagents">docs.x.ai/build/features/subagents</a></li>
+                    <li>Grok Build MCP Servers (official, verified live) — <a href="https://docs.x.ai/build/features/mcp-servers">docs.x.ai/build/features/mcp-servers</a></li>
+                    <li>Grok Remote MCP Tools (secondary summary) — <a href="https://ai-x.chat/docs/remote-mcp-tools/">ai-x.chat/docs/remote-mcp-tools</a></li>
+                    <li>A2A Specification v1.0.0 (official) — <a href="https://a2a-protocol.org/latest/specification/">a2a-protocol.org/latest/specification</a></li>
+                    <li>ACP Overview (official) — <a href="https://agentclientprotocol.com/protocol/v2/overview">agentclientprotocol.com/protocol/v2/overview</a></li>
+                    <li>ACP Remote Transport RFD — <a href="https://agentclientprotocol.com/rfds/streamable-http-websocket-transport">agentclientprotocol.com/rfds/streamable-http-websocket-transport</a></li>
+                    <li>MCP Specification 2026-07-28 (official) — <a href="https://modelcontextprotocol.io/specification/2026-07-28">modelcontextprotocol.io/specification/2026-07-28</a></li>
+                    <li>OpenAI Agents SDK Handoffs (official) — <a href="https://openai.github.io/openai-agents-python/handoffs/">openai.github.io/openai-agents-python/handoffs</a></li>
+                    <li>Claude Code Subagents (official) — <a href="https://code.claude.com/docs/en/sub-Agents">code.claude.com/docs/en/sub-Agents</a></li>
+                    <li>Codex Subagents (secondary) — <a href="https://docs.arantic.com/codex/subagents">docs.arantic.com/codex/subagents</a> &middot; comparison — <a href="https://arte.itlibra.com/en/articles/codex-claude-code-parallel-subagents">arte.itlibra.com/en/articles/codex-claude-code-parallel-subagents</a></li>
+                    <li>Grok Build open-source analysis — <a href="https://codex.danielvaughan.com/2026/08/01/grok-build-open-source-apache-2-codex-cli-architecture-acp-tool-porting-terminal-agent-wars/">codex.danielvaughan.com/2026/08/01/grok-build-open-source&hellip;</a> &middot; review — <a href="https://vibecoding.app/blog/grok-build-review">vibecoding.app/blog/grok-build-review</a></li>
+                    <li>xAI protocol tracker — <a href="https://agenticplug.ai/current-state-of-agentic-commerce">agenticplug.ai/current-state-of-agentic-commerce</a> &middot; mesh scan — <a href="https://github.com/valdesalex369/ultra-instinct-bus/blob/HEAD/briefs/mesh_2026_scan.md">github.com/valdesalex369/ultra-instinct-bus/&hellip;/mesh_2026_scan.md</a> &middot; audit — <a href="https://ppc.land/only-14-of-29-ai-products-let-users-stop-ad-data-sharing-audit-finds/">ppc.land/only-14-of-29-ai-products&hellip;</a></li>
+                    <li>Grok A2A via Mastra (third-party) — <a href="https://skalablog.com/p/grok-a2a-connect-grok-to-your-own-agents/">skalablog.com/p/grok-a2a-connect-grok-to-your-own-agents</a></li>
+                    <li>Grok Code Fast 1 pricing (secondary) — <a href="https://pengen.diewe.workers.dev/owen_fox/grok-api-pricing-setup-access-guide-2026-dfe">pengen.diewe.workers.dev/owen_fox/grok-api-pricing-setup-access-guide-2026-dfe</a> &middot; model listings — <a href="https://sourceforge.net/software/ai-models/integrates-with-grok/">sourceforge.net/software/ai-models/integrates-with-grok</a> &middot; <a href="https://www.cometapi.com/models/xai/grok-build-0-1/">cometapi.com/models/xai/grok-build-0-1</a></li>
+                    <li>Gitea workflow — <a href="https://www.voodoo.business/blog/2026/11/05/using-your-self-hosted-gitea-server/">voodoo.business/blog/2026/11/05/using-your-self-hosted-gitea-server</a> &middot; <a href="https://spaceterran.com/posts/terrascan-self-hosted-ai-code-review-gitea/">spaceterran.com/posts/terrascan-self-hosted-ai-code-review-gitea</a></li>
+                    <li>Gitea MCP for Codex (Composio, third-party) — <a href="https://composio.dev/toolkits/gitea/framework/codex">composio.dev/toolkits/gitea/framework/codex</a></li>
+                    <li>Handoff / AGENTS.md guides — <a href="https://sublimecoding.com/blog/coding-agent-rollout-engineering-team">sublimecoding.com/blog/coding-agent-rollout-engineering-team</a> &middot; <a href="https://thepromptshelf.dev/blog/writing-effective-agentsmd-guide/">thepromptshelf.dev/blog/writing-effective-agentsmd-guide</a> &middot; <a href="https://codeharness.kuckit.dev/agents-md-template/">codeharness.kuckit.dev/agents-md-template</a></li>
+                </ul>
+                <div class="footer-note">Research read 2026-11-11 (America/Chicago). Built solely from the finished research report for this request — confirmed values are marked as such, secondary-only values carry their hedge, and unverified items are listed under Open questions rather than presented as fact.</div>
+            </section>
+
+            <p class="research-back"><a class="text-link" href="/#research">&larr; All research</a></p>
+        </article>
+    </main>
+    <footer class="site-footer container"><span>© 2026 Soon F. Hoo</span><span class="privacy-note">This site uses Google Analytics to count visits and clicks. No names, emails, or other personal details are collected.<span class="logo-credit">Logo set in <a href="https://xiaoxue.iis.sinica.edu.tw/chongxi/" rel="noopener">Chongxi Small Seal (崇羲篆體)</a> by Academia Sinica, <a href="https://creativecommons.org/licenses/by-nd/3.0/tw/" rel="noopener license">CC BY-ND 3.0 TW</a></span></span><a href="#page-top">Back to top ↑</a></footer>
+    <script>
+    document.getElementById('copyBtn').addEventListener('click', function(event){
+      event.preventDefault();
+      var t = document.getElementById('tpl').innerText;
+      var msg = document.getElementById('copyMsg');
+      function done(){ msg.textContent = 'Copied — paste into tasks/TEMPLATE.md'; setTimeout(function(){msg.textContent=''},3000); }
+      function fallback(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ msg.textContent='Select the template text and copy manually'; } document.body.removeChild(ta); }
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done).catch(fallback); } else { fallback(); }
+    });
+    </script>
+</body>
+</html>
